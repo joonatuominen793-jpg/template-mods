@@ -53,5 +53,6 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
+        sdk: v6.0.0-alpha.1
           name: Build Output
           path: ${{ steps.build.outputs.build-output }}
