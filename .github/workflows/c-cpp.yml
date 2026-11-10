@@ -1,23 +1,58 @@
-name: C/C++ CI
+name: Build Geode Mod
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches:
+      - "**"
 
 jobs:
   build:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - name: Windows
+          os: windows-latest
 
-    runs-on: ubuntu-latest
+        - name: macOS
+          os: macos-latest
+
+        - name: iOS
+          os: macos-latest
+          target: iOS
+
+        - name: Android32
+          os: ubuntu-latest
+          target: Android32
+
+        - name: Android64
+          os: ubuntu-latest
+          target: Android64
+
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
 
     steps:
-    - uses: actions/checkout@v4
-    - name: configure
-      run: ./configure
-    - name: make
-      run: make
-    - name: make check
-      run: make check
-    - name: make distcheck
-      run: make distcheck
+      - uses: actions/checkout@v7
+
+      - name: Build the mod
+        uses: geode-sdk/build-geode-mod@main
+        with:
+          combine: true
+          target: ${{ matrix.config.target }}
+
+  package:
+    name: Package builds
+    runs-on: ubuntu-latest
+    needs: ['build']
+
+    steps:
+      - uses: geode-sdk/build-geode-mod/combine@main
+        id: build
+
+      - uses: actions/upload-artifact@v7
+        with:
+        sdk: v6.0.0-alpha.1
+          name: Build Output
+          path: ${{ steps.build.outputs.build-output }}
